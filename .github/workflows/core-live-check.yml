@@ -7,10 +7,10 @@ on:
 permissions:
   contents: read
 jobs:
-  staging:
+  production_entrypoints:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify the four private product entrypoints
+      - name: Verify the four deployed private product entrypoints
         run: |
           curl -fsS --max-time 60 https://jenlow-core-stage-check.jenlow-production.workers.dev/health > /tmp/core.json
           python - <<'PY'
