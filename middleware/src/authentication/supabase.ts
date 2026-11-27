@@ -3,7 +3,7 @@ import { json, legacyError } from '../core/respond';
 import { withinLimit } from '../security/rateLimit';
 import { newId } from '../core/database';
 import { ACCESS_TTL_SECONDS } from '../sessions/tokens';
-import {issueProviderSession,providerSessionId} from '../sessions/providerSessions';
+import {currentProduct,issueProviderSession,providerSessionId} from '../sessions/providerSessions';
 
 // Public project settings, never privileged credentials. Environment overrides
 // retain compatibility with the existing login and allow configuration rotation.
@@ -53,7 +53,7 @@ export async function exchangeSupabase(ctx: Ctx): Promise<Response> {
     }
     const id = newId();
     const metadataName = identity.user_metadata?.display_name || identity.user_metadata?.full_name;
-    const name = (typeof metadataName === 'string' ? metadataName : email.split('@')[0]).replace(/[\r\n\t]/g, ' ').trim().slice(0, 90) || 'Membre JenLow';
+    const name = currentProduct(ctx)!=='network' ? 'Membre JenLow' : (typeof metadataName === 'string' ? metadataName : email.split('@')[0]).replace(/[\r\n\t]/g, ' ').trim().slice(0, 90) || 'Membre JenLow';
     const handle = 'jl_' + id.replace(/-/g, '').slice(0, 15);
     try {
       await ctx.sql.batch([
@@ -71,5 +71,5 @@ export async function exchangeSupabase(ctx: Ctx): Promise<Response> {
   const session=await issueProviderSession(ctx,member.id,providerId);
   if(!session)return legacyError('session_revoked_or_inactive',401);
   await ctx.sql.run("UPDATE auth_identities SET last_sign_in_at=CURRENT_TIMESTAMP WHERE provider='oidc' AND provider_subject=? AND user_id=?", providerSubject, member.id);
-  return json({ user: { id: member.id, email, displayName: member.display_name, handle: member.handle,profileId:session.profileId }, accessToken:session.accessToken, expiresIn: ACCESS_TTL_SECONDS, tokenType: 'Bearer' });
+  return json({ user: { id: member.id, email, ...(currentProduct(ctx)==='network'?{displayName:member.display_name,handle:member.handle}:{}),profileId:session.profileId }, accessToken:session.accessToken, expiresIn: ACCESS_TTL_SECONDS, tokenType: 'Bearer' });
 }

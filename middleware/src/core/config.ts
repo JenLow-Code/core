@@ -38,6 +38,8 @@ export interface Env {
   APP_VERSION?: string;
   ENVIRONMENT?: string;
   PRODUCT?: 'network'|'tools'|'production'|'live';
+  /** Set only by a trusted named Worker entrypoint, never by request data. */
+  PROVISION_TECHNICAL_PROFILE?: boolean;
 }
 
 export const MIN_SECRET_LENGTH = 32;

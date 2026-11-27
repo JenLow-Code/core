@@ -7,6 +7,8 @@ import { b64url, fromB64url } from '../core/database';
  */
 export const ISSUER = 'jenlow-network-api';
 export const AUDIENCE = 'jenlow-network';
+const tokenIssuer=(env:Env)=>!env.PRODUCT||env.PRODUCT==='network'?ISSUER:'jenlow-security';
+const tokenAudience=(env:Env)=>!env.PRODUCT||env.PRODUCT==='network'?AUDIENCE:'jenlow-'+env.PRODUCT;
 export const ACCESS_TTL_SECONDS = 900;
 export const REFRESH_TTL_DAYS = 30;
 
@@ -20,7 +22,7 @@ async function key(env: Env, usage: 'sign' | 'verify'): Promise<CryptoKey> {
 export async function signAccessToken(userId: string, env: Env, nowSeconds = Math.floor(Date.now() / 1000), scope?:{sid:string;product:string}): Promise<string> {
   const header = b64url(encoder.encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
   const payload = b64url(
-    encoder.encode(JSON.stringify({ sub: userId, iat: nowSeconds, exp: nowSeconds + ACCESS_TTL_SECONDS, iss: ISSUER, aud: AUDIENCE, ...(scope||{}) })),
+    encoder.encode(JSON.stringify({ sub: userId, iat: nowSeconds, exp: nowSeconds + ACCESS_TTL_SECONDS, iss: tokenIssuer(env), aud: tokenAudience(env), ...(scope||{}) })),
   );
   const sig = await crypto.subtle.sign('HMAC', await key(env, 'sign'), encoder.encode(header + '.' + payload));
   return header + '.' + payload + '.' + b64url(new Uint8Array(sig));
@@ -40,9 +42,9 @@ export async function verifyTokenClaims(token: string, env: Env): Promise<TokenC
     if (!ok) return null;
     const payload = JSON.parse(decoder.decode(fromB64url(p)));
     const now = Math.floor(Date.now() / 1000);
-    if (payload.iss !== ISSUER || payload.aud !== AUDIENCE || !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp) || payload.exp <= now || payload.iat > now + 30 || payload.exp <= payload.iat || payload.exp - payload.iat > ACCESS_TTL_SECONDS) return null;
+    if (payload.iss !== tokenIssuer(env) || payload.aud !== tokenAudience(env) || !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp) || payload.exp <= now || payload.iat > now + 30 || payload.exp <= payload.iat || payload.exp - payload.iat > ACCESS_TTL_SECONDS) return null;
     if(typeof payload.sub!=='string'||!payload.sub)return null;
-    if(typeof payload.sid==='string'&&payload.sid&&['network','tools','production','live'].includes(payload.product))return {sub:payload.sub,sid:payload.sid,product:payload.product};
+    if(typeof payload.sid==='string'&&payload.sid&&payload.product===(env.PRODUCT||'network'))return {sub:payload.sub,sid:payload.sid,product:payload.product};
     return env.ENVIRONMENT==='test'&&payload.sid===undefined&&payload.product===undefined?{sub:payload.sub}:null;
   } catch {
     return null;

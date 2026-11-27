@@ -9,7 +9,7 @@
     "deploy:dry-run": "wrangler deploy --dry-run --outdir dist",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "test": "node --import tsx --test --test-concurrency=1 test/*.test.ts",
-    "bundle:check": "esbuild src/index.ts --bundle --format=esm --platform=neutral --external:node:crypto --outfile=dist/worker.check.js --log-level=warning"
+    "bundle:check": "esbuild src/index.ts --bundle --format=esm --platform=neutral --external:node:crypto --external:cloudflare:workers --outfile=dist/worker.check.js --log-level=warning"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

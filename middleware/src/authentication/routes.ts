@@ -97,7 +97,9 @@ export async function me(ctx: Ctx): Promise<Response> {
   const viewer=await ctx.user();
   const uid=viewer.id;
   const user = await ctx.sql.first<{ account_status: string }>('SELECT id,handle,display_name,email,account_status FROM users WHERE id=?', uid);
-  return user?.account_status === 'active' ? json({ user:{...user,profile_id:viewer.profileId,product:viewer.product,roles:viewer.roles} }) : legacyError('not_authenticated', 401);
+  if(user?.account_status !== 'active')return legacyError('not_authenticated',401);
+  const {handle,display_name,...account}=user as typeof user & {handle:string;display_name:string};
+  return json({user:{...account,...(!viewer.product||viewer.product==='network'?{handle,display_name}:{}),profile_id:viewer.profileId,product:viewer.product,roles:viewer.roles}});
 }
 
 export async function logout(ctx: Ctx): Promise<Response> {

@@ -71,8 +71,8 @@ export class Ctx {
     const locale = (LOCALES as readonly string[]).includes(row.locale || '') ? (row.locale as Locale) : 'fr';
     return (this.viewerCache = {
       id: row.id,
-      handle: row.handle,
-      displayName: row.display_name,
+      handle: scope && claims?.product !== 'network' ? '' : row.handle,
+      displayName: scope && claims?.product !== 'network' ? '' : row.display_name,
       locale,
       timezone: row.timezone || 'Europe/Paris',
       roles: scope?(scope.roles?scope.roles.split(','):[]):(row.roles?row.roles.split(','):[]),

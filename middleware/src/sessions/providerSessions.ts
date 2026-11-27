@@ -20,9 +20,8 @@ export function providerSessionId(token:string,subject:string):string|null{
 }
 export async function issueProviderSession(ctx:Ctx,userId:string,providerId:string){
   const product=currentProduct(ctx),now=seconds();
-  // A verified Network login provisions its own technical profile only.
-  // Other products must use their own trusted provisioning flow.
-  if(product==='network')await ctx.sql.run("INSERT INTO product_profiles(id,user_id,product) VALUES(?,?,'network') ON CONFLICT(user_id,product) DO NOTHING",newId(),userId);
+  // A verified provider login can provision only the technical profile of the trusted product.
+  if(product==='network'||ctx.env.PROVISION_TECHNICAL_PROFILE===true)await ctx.sql.run("INSERT INTO product_profiles(id,user_id,product) VALUES(?,?,?) ON CONFLICT(user_id,product) DO NOTHING",newId(),userId,product);
   const profile=await ctx.sql.first<{id:string}>("SELECT id FROM product_profiles WHERE user_id=? AND product=? AND status='active'",userId,product);
   if(!profile)return null;
   await ctx.sql.run(`INSERT INTO provider_sessions(id,provider_session_id,user_id,profile_id,product,created_at,last_activity_at,verified_at)
