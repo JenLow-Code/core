@@ -1,0 +1,24 @@
+name: Core security validation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: middleware
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run bundle:check
+      - name: Validate retired OCR/OMR bridge in isolation
+        run: node --test ../services/music-engine/test/scan-worker.test.mjs

@@ -1,0 +1,8 @@
+{
+  "name": "@jenlow/music-engine-legacy-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/scan-worker.test.mjs"
+  }
+}
