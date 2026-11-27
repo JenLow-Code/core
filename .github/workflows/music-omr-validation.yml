@@ -38,6 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build pinned Python and Audiveris 5.11.0 image
+        id: image
         run: docker build --pull --file services/music-engine/omr-service/Dockerfile --tag jenlow-omr:ci services/music-engine/omr-service
       - name: Verify real Audiveris CLI can start headlessly
         timeout-minutes: 2
@@ -45,6 +46,7 @@ jobs:
           trap 'docker rm -f jenlow-omr-cli >/dev/null 2>&1 || true' EXIT
           timeout -k 10s 75s docker run --name jenlow-omr-cli --rm jenlow-omr:ci xvfb-run -a /opt/audiveris/bin/Audiveris -batch -help
       - name: Verify HTTP backend health
+        if: always() && steps.image.outcome == 'success'
         timeout-minutes: 3
         run: |
           trap 'docker rm -f omr-service-test >/dev/null 2>&1 || true' EXIT
