@@ -8,12 +8,11 @@ preview_urls = false
 # Accessible only via the authorized product gateway's private service binding.
 [vars]
 ENVIRONMENT = "staging"
-PRODUCT = "network"
 ALLOWED_ORIGIN = "http://localhost:8081"
 [[d1_databases]]
 binding = "DB"
 database_name = "jenlow-staging"
-database_id = "REPLACE_WITH_STAGING_DATABASE_ID"
+database_id = "1f602df4-8c29-42c9-8924-40b706153420"
 # Historical migration chain is for isolated tests only; do not auto-apply.
 [triggers]
 crons = ["*/15 * * * *"]
