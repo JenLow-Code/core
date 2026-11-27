@@ -34,14 +34,20 @@ jobs:
     name: Build Audiveris Docker runtime and verify executable
     runs-on: ubuntu-latest
     needs: validate
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - name: Build pinned Python and Audiveris 5.11.0 image
         run: docker build --pull --file services/music-engine/omr-service/Dockerfile --tag jenlow-omr:ci services/music-engine/omr-service
       - name: Verify real Audiveris CLI can start headlessly
-        run: timeout 75s docker run --rm jenlow-omr:ci xvfb-run -a /opt/audiveris/bin/Audiveris -version
-      - name: Verify HTTP backend health
+        timeout-minutes: 2
         run: |
+          trap 'docker rm -f jenlow-omr-cli >/dev/null 2>&1 || true' EXIT
+          timeout -k 10s 75s docker run --name jenlow-omr-cli --rm jenlow-omr:ci xvfb-run -a /opt/audiveris/bin/Audiveris -batch -help
+      - name: Verify HTTP backend health
+        timeout-minutes: 3
+        run: |
+          trap 'docker rm -f omr-service-test >/dev/null 2>&1 || true' EXIT
           docker run -d --rm --name omr-service-test -e OMR_API_SECRET=unit-test-secret-must-be-at-least-32-chars -p 127.0.0.1:8000:8000 jenlow-omr:ci
           for attempt in $(seq 1 18); do
             if curl -fsS http://127.0.0.1:8000/health | grep -q '"available":true'; then
