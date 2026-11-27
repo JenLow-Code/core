@@ -1,0 +1,7 @@
+# Product security boundary
+
+The private Core Worker has one implementation and four named Cloudflare service entrypoints: NetworkSecurity, ToolsSecurity, ProductionSecurity, LiveSecurity. Each binds a fixed product selected by the deployment, not by request headers. The default export preserves Network's existing gateway compatibility. A verified Supabase identity may create only the technical product profile for its trusted entrypoint; no roles are granted. A token is scoped to its product, profile and revocable session. Network legacy issuer and audience are preserved. Other products receive common identity data only, not the legacy Network display name or handle.
+
+Gateway deployment must bind to its named entrypoint and use an explicit route allowlist. It must not expose arbitrary private RPC or accept user/product/role headers. Public gateways for unused branches are not deployed merely because a named entrypoint exists. Product business profiles and data remain subject to Phase B review.
+
+Release procedure: green Core CI, byte-verified bundle, isolated D1 staging, four-scope runtime probe, immutable Worker version upload retaining existing secrets/bindings, controlled promotion, public Network smoke and real user acceptance. Preserve previous version for rollback. No automatic production DB migration.

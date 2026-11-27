@@ -1,0 +1,17 @@
+# Use only after CI and staging verification, via controlled release.
+name = "jenlow-security"
+main = "src/index.ts"
+compatibility_date = "2026-10-25"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+preview_urls = false
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGIN = "https://network.jenlow.net"
+# Default export retains Network compatibility. Named entrypoints select other scopes.
+[[d1_databases]]
+binding = "DB"
+database_name = "network"
+database_id = "62ca4199-a913-4444-b176-b5d18c8817d1"
+# AUTH_JWT_SECRET is maintained as an existing Cloudflare secret, never committed.
+# Do not run any historical SQL against production.
