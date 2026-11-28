@@ -2,7 +2,7 @@ name: Core live deployment verification
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/core-live-check.yml']
+    paths: ['.github/workflows/core-live-check.yml', 'middleware/wrangler.production.toml.example']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,7 +23,8 @@ jobs:
             assert code==expected
             return json.load(open('/tmp/core-response')) if code!=204 else {}
           assert check('/health',200)['security']=='bound'
-          assert check('/api/health/ready',200)['status']=='ready'
+          ready=check('/api/health/ready',200)
+          assert ready['status']=='ready' and ready['scope']=='security' and ready['functionalBackend']=='not_connected'
           check('/core/identity',401)
           check('/core/identity',401,headers=['Authorization: Bearer forged','X-Product: tools','X-User-Id: forged'])
           check('/core/auth/supabase/exchange',401,'POST')
@@ -50,7 +51,8 @@ jobs:
             return json.load(open('/tmp/tools-response')) if code!=204 else {}
           health=check('/health',200)
           assert health['security']=='bound' and health['product']=='tools'
-          assert check('/api/health/ready',200)['status']=='ready'
+          ready=check('/api/health/ready',200)
+          assert ready['status']=='ready' and ready['scope']=='security' and ready['functionalBackend']=='not_connected'
           check('/core/identity',401)
           check('/core/identity',401,headers=['Authorization: Bearer forged','X-Product: network','X-User-Id: forged'])
           check('/core/auth/supabase/exchange',401,'POST')
