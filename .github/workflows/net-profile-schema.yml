@@ -1,0 +1,19 @@
+name: Core Network profile schema validation
+on:
+  push:
+    paths: ['database/core-migrations/**','database/test_net_identity_profiles.py','.github/workflows/net-profile-schema.yml']
+  pull_request:
+    paths: ['database/core-migrations/**','database/test_net_identity_profiles.py','.github/workflows/net-profile-schema.yml']
+permissions:
+  contents: read
+jobs:
+  sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python database/test_net_identity_profiles.py
